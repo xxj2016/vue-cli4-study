@@ -1,10 +1,14 @@
 <template>
   <div id="app">
-    <div id="nav">
+    <!-- <div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link>
-    </div>
+    </div> -->
     <router-view/>
+    <van-grid clickable :column-num="2">
+      <van-grid-item icon="home-o" text="路由跳转" to="/" />
+      <van-grid-item icon="search" text="URL 跳转" url="/about" />
+    </van-grid>
   </div>
 </template>
 
