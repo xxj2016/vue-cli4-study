@@ -1,116 +1,189 @@
-// vue.config.js
-const path =  require('path');
-const CompressionWebpackPlugin = require("compression-webpack-plugin"); // 开启gzip压缩， 按需引用
-const productionGzipExtensions = /\.(js|css|json|txt|html|ico|svg)(\?.*)?$/i; // 开启gzip压缩， 按需写入
-const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin; // 打包分析
-const IS_PROD = ['production', 'prod'].includes(process.env.NODE_ENV);
-const resolve = (dir) => path.join(__dirname, dir);
+'use strict'
+const path = require('path')
+const defaultSettings = require('./src/config/index.js')
+function resolve(dir) {
+  return path.join(__dirname, dir)
+}
+const name = defaultSettings.title || 'vue mobile template' // page title
+// const port = 9018 // dev port
+const externals = {
+  vue: 'Vue',
+  'vue-router': 'VueRouter',
+  vuex: 'Vuex',
+  vant: 'vant',
+  axios: 'axios'
+}
+// cdn
+const cdn = {
+  // 开发环境
+  dev: {
+    css: [],
+    js: []
+  },
+  // 生产环境
+  build: {
+    css: ['https://cdn.jsdelivr.net/npm/vant@beta/lib/index.css'],
+    js: [
+      'https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/vue-router/3.0.6/vue-router.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js',
+      'https://cdn.jsdelivr.net/npm/vant@beta/lib/vant.min.js'
+    ]
+  }
+}
 module.exports = {
-    publicPath: process.env.NODE_ENV === 'production' ? '/site/vue-demo/' : '/',  // 公共路径
-    indexPath: 'index.html' , // 相对于打包路径index.html的路径
-    outputDir: process.env.outputDir || 'dist', // 'dist', 生产环境构建文件的目录
-    assetsDir: 'static', // 相对于outputDir的静态资源(js、css、img、fonts)目录
-    lintOnSave: false, // 是否在开发环境下通过 eslint-loader 在每次保存时 lint 代码
-    runtimeCompiler: true, // 是否使用包含运行时编译器的 Vue 构建版本
-    productionSourceMap: !IS_PROD, // 生产环境的 source map
-    parallel: require("os").cpus().length > 1, // 是否为 Babel 或 TypeScript 使用 thread-loader。该选项在系统的 CPU 有多于一个内核时自动启用，仅作用于生产构建。
-    pwa: {}, // 向 PWA 插件传递选项。
-    chainWebpack: config => {
-        config.resolve.symlinks(true); // 修复热更新失效
-        // 如果使用多页面打包，使用vue inspect --plugins查看html是否在结果数组中
-        config.plugin("html").tap(args => {
-            // 修复 Lazy loading routes Error
-            args[0].chunksSortMode = "none";
-            return args;
-        });
-        config.resolve.alias // 添加别名
-            .set('@', resolve('src'))
-            .set('@assets', resolve('src/assets'))
-            .set('@components', resolve('src/components'))
-            .set('@views', resolve('src/views'))
-            .set('@store', resolve('src/store'));
-        // 压缩图片
-        // 需要 npm i -D image-webpack-loader
-        config.module
-            .rule("images")
-            .use("image-webpack-loader")
-            .loader("image-webpack-loader")
-            .options({
-                mozjpeg: { progressive: true, quality: 65 },
-                optipng: { enabled: false },
-                pngquant: { quality: [0.65, 0.9], speed: 4 },
-                gifsicle: { interlaced: false },
-                webp: { quality: 75 }
-            });
-        // 打包分析, 打包之后自动生成一个名叫report.html文件(可忽视)
-        if (IS_PROD) {
-            config.plugin("webpack-report").use(BundleAnalyzerPlugin, [
-                {
-                    analyzerMode: "static"
-                }
-            ]);
+  // publicPath: './', // router hash 模式使用
+  publicPath: process.env.NODE_ENV === 'development' ? '/' : '/app/', //router history模式使用 需要区分生产环境和开发环境，不然build会报错
+  outputDir: 'dist',
+  assetsDir: 'static',
+  lintOnSave: process.env.NODE_ENV === 'development',
+  productionSourceMap: false,
+  // devServer: {
+  //   https: false,
+  //   host: 'localhost',
+  //   port: port,
+  //   open: false,
+  //   overlay: {
+  //     warnings: false,
+  //     errors: true
+  //   },
+  //   proxy: {
+  //     //设置代理，必须填
+  //     '/api': {
+  //       //设置拦截器  拦截器格式   斜杠+拦截器名字，名字可以自己定
+  //       target: 'http://t.yushu.im', //代理的目标地址，这是豆瓣接口地址网址
+  //       changeOrigin: true, //是否设置同源，输入是的
+  //       pathRewrite: {
+  //         //路径重写
+  //         '^/api': '/api' //选择忽略拦截器里面的单词
+  //       }
+  //     }
+  //   }
+  // },
+  devServer: {
+    host: 'localhost',
+    // port: 3000, // 启动端口
+    // 代理
+    proxy: {
+      // 拦截请求是以 /common 开头的接口，代理访问到 https://www.hinsenoo.com
+      // 例：https://www.hinsenoo.com/common/api
+      // 当访问到 /u 时会转发到 target
+      // '/common': {
+      //   // 代理的目标地址,接口的域名
+      //   target: 'https://www.vue-js.com',
+      //   secure: false, // 如果是https接口，需要配置这个参数
+      //   // 若接口跨域，则要将主机头的源点更改为 url 地址，设为 true
+      //   changeOrigin: true,
+      //   // 路径转发规则：重写请求，把 /api 置为空
+      //   // 比如 源点访问的是 /commom/api/path, 那么会解析为 /api/path
+      //   pathRewrite: {
+      //     // 把 /common 置为空
+      //     '/common': ''
+      //   }
+      // },
+      '/swipes': {
+        target: 'http://localhost:3000/swipes',
+        changeOrigin: true,
+        ws: true,
+        pathRewrite: {
+          '^/swipes': ''
         }
-    },
-    configureWebpack: config => {
-        // 开启 gzip 压缩
-        // 需要 npm i -D compression-webpack-plugin
-        const plugins = [];
-        if (IS_PROD) {
-            plugins.push(
-                new CompressionWebpackPlugin({
-                    filename: "[path].gz[query]",
-                    algorithm: "gzip",
-                    test: productionGzipExtensions,
-                    threshold: 10240,
-                    minRatio: 0.8
-                })
-            );
+      },
+      '/v2/movie/in_theaters': {
+        target: 'http://t.yushu.im/v2/movie/in_theaters',
+        changeOrigin: true,
+        ws: true,
+        pathRewrite: {
+          '^/v2/movie/in_theaters': ''
         }
-        config.plugins = [...config.plugins, ...plugins];
-    },
-    css: {
-        extract: IS_PROD,
-        requireModuleExtension: false,// 去掉文件名中的 .module
-        loaderOptions: {
-                // 给 less-loader 传递 Less.js 相关选项
-                less: {
-                    // `globalVars` 定义全局对象，可加入全局变量
-                    globalVars: {
-                        primary: '#333'
-                    }
-                }
+      }
+    }
+  },
+
+  configureWebpack: config => {
+    // 为生产环境修改配置...
+    if (process.env.NODE_ENV === 'production') {
+      // externals里的模块不打包
+      Object.assign(config, {
+        name: name,
+        externals: externals
+      })
+    }
+    // 为开发环境修改配置...
+    // if (process.env.NODE_ENV === 'development') {
+    // }
+  },
+  chainWebpack(config) {
+    config.plugins.delete('preload') // TODO: need test
+    config.plugins.delete('prefetch') // TODO: need test
+    // alias
+    config.resolve.alias
+      .set('@', resolve('src'))
+      .set('assets', resolve('src/assets'))
+      .set('api', resolve('src/api'))
+      .set('views', resolve('src/views'))
+      .set('components', resolve('src/components'))
+
+    /**
+     * 添加CDN参数到htmlWebpackPlugin配置中， 详见public/index.html 修改
+     */
+    config.plugin('html').tap(args => {
+      if (process.env.NODE_ENV === 'production') {
+        args[0].cdn = cdn.build
+      }
+      if (process.env.NODE_ENV === 'development') {
+        args[0].cdn = cdn.dev
+      }
+      return args
+    })
+
+    // set preserveWhitespace
+    config.module
+      .rule('vue')
+      .use('vue-loader')
+      .loader('vue-loader')
+      .tap(options => {
+        options.compilerOptions.preserveWhitespace = true
+        return options
+      })
+      .end()
+
+    config
+      // https://webpack.js.org/configuration/devtool/#development
+      .when(process.env.NODE_ENV === 'development', config => config.devtool('cheap-source-map'))
+
+    config.when(process.env.NODE_ENV !== 'development', config => {
+      config
+        .plugin('ScriptExtHtmlWebpackPlugin')
+        .after('html')
+        .use('script-ext-html-webpack-plugin', [
+          {
+            // `runtime` must same as runtimeChunk name. default is `runtime`
+            inline: /runtime\..*\.js$/
+          }
+        ])
+        .end()
+      config.optimization.splitChunks({
+        chunks: 'all',
+        cacheGroups: {
+          commons: {
+            name: 'chunk-commons',
+            test: resolve('src/components'), // can customize your rules
+            minChunks: 3, //  minimum common number
+            priority: 5,
+            reuseExistingChunk: true
+          },
+          libs: {
+            name: 'chunk-libs',
+            chunks: 'initial', // only package third parties that are initially dependent
+            test: /[\\/]node_modules[\\/]/,
+            priority: 10
+          }
         }
-    },
-    devServer: {
-            overlay: { // 让浏览器 overlay 同时显示警告和错误
-              warnings: true,
-              errors: true
-            },
-            host: "localhost",
-            port: 8080, // 端口号
-            https: false, // https:{type:Boolean}
-            open: false, //配置自动启动浏览器
-            hotOnly: true, // 热更新
-            // proxy: 'http://localhost:8080'   // 配置跨域处理,只有一个代理
-            proxy: { //配置多个跨域
-                "/api": {
-                    target: "http://172.11.11.11:7071",
-                    changeOrigin: true,
-                    // ws: true,//websocket支持
-                    secure: false,
-                    pathRewrite: {
-                        "^/api": "/"
-                    }
-                },
-                "/api2": {
-                    target: "http://172.12.12.12:2018",
-                    changeOrigin: true,
-                    //ws: true,//websocket支持
-                    secure: false,
-                    pathRewrite: {
-                        "^/api2": "/"
-                    }
-                },
-            }
-        }
+      })
+      config.optimization.runtimeChunk('single')
+    })
+  }
 }

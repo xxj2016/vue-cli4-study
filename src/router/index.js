@@ -1,29 +1,32 @@
 import Vue from 'vue'
-import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
+import Router from 'vue-router'
 
-Vue.use(VueRouter)
-
-const routes = [
+Vue.use(Router)
+export const router = [
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    name: 'index',
+    component: () => import('@/views/home/index'),
+    meta: {
+      keepAlive: false
+    }
   },
   {
-    path: '/about',
-    name: 'About',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+    path: '/cart',
+    name: 'cart',
+    component: () => import('@/views/cart/index'),
+    meta: {
+      keepAlive: false
+    }
   }
 ]
 
-const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
-  routes
-})
+const createRouter = () =>
+  new Router({
+    mode: 'history', // 如果你是 history模式 需要配置vue.config.js publicPath
+    // base: '/app/',
+    scrollBehavior: () => ({y: 0}),
+    routes: router
+  })
 
-export default router
+export default createRouter()
