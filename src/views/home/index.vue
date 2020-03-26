@@ -51,6 +51,11 @@ export default {
       // getUserInfo()
       //   .then(() => {})
       //   .catch(() => {})
+      // this.getSwipes()
+      this.getVueTopics()
+      this.getInTheaters()
+    },
+    getSwipes() {
       this.http
         .get('/swipes')
         .then(Response => {
@@ -61,8 +66,22 @@ export default {
         .catch(function(error) {
           console.log(error)
         })
+    },
+    getInTheaters() {
       this.http
         .get('/v2/movie/in_theaters')
+        .then(Response => {
+          let res = Response.subjects
+          // this.swipes = res
+          console.log(res)
+        })
+        .catch(function(error) {
+          console.log(error)
+        })
+    },
+    getVueTopics() {
+      this.http
+        .get('/api/v1/topics')
         .then(Response => {
           let res = Response.data
           // this.swipes = res

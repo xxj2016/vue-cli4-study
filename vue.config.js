@@ -5,7 +5,10 @@ function resolve(dir) {
   return path.join(__dirname, dir)
 }
 const name = defaultSettings.title || 'vue mobile template' // page title
-// const port = 9018 // dev port
+const port = 9018 // dev port
+const localUrl = 'http://localhost:3000'
+const vueJsUrl = 'https://www.vue-js.com'
+const douBanMovieUrl = 'http://t.yushu.im'
 const externals = {
   vue: 'Vue',
   'vue-router': 'VueRouter',
@@ -40,51 +43,14 @@ module.exports = {
   assetsDir: 'static',
   lintOnSave: process.env.NODE_ENV === 'development',
   productionSourceMap: false,
-  // devServer: {
-  //   https: false,
-  //   host: 'localhost',
-  //   port: port,
-  //   open: false,
-  //   overlay: {
-  //     warnings: false,
-  //     errors: true
-  //   },
-  //   proxy: {
-  //     //设置代理，必须填
-  //     '/api': {
-  //       //设置拦截器  拦截器格式   斜杠+拦截器名字，名字可以自己定
-  //       target: 'http://t.yushu.im', //代理的目标地址，这是豆瓣接口地址网址
-  //       changeOrigin: true, //是否设置同源，输入是的
-  //       pathRewrite: {
-  //         //路径重写
-  //         '^/api': '/api' //选择忽略拦截器里面的单词
-  //       }
-  //     }
-  //   }
-  // },
   devServer: {
+    https: true,
     host: 'localhost',
-    // port: 3000, // 启动端口
+    port: port, // 启动端口
     // 代理
     proxy: {
-      // 拦截请求是以 /common 开头的接口，代理访问到 https://www.hinsenoo.com
-      // 例：https://www.hinsenoo.com/common/api
-      // 当访问到 /u 时会转发到 target
-      // '/common': {
-      //   // 代理的目标地址,接口的域名
-      //   target: 'https://www.vue-js.com',
-      //   secure: false, // 如果是https接口，需要配置这个参数
-      //   // 若接口跨域，则要将主机头的源点更改为 url 地址，设为 true
-      //   changeOrigin: true,
-      //   // 路径转发规则：重写请求，把 /api 置为空
-      //   // 比如 源点访问的是 /commom/api/path, 那么会解析为 /api/path
-      //   pathRewrite: {
-      //     // 把 /common 置为空
-      //     '/common': ''
-      //   }
-      // },
       '/swipes': {
-        target: 'http://localhost:3000/swipes',
+        target: `${localUrl}/swipes`,
         changeOrigin: true,
         ws: true,
         pathRewrite: {
@@ -92,11 +58,21 @@ module.exports = {
         }
       },
       '/v2/movie/in_theaters': {
-        target: 'http://t.yushu.im/v2/movie/in_theaters',
+        target: `${douBanMovieUrl}/v2/movie/in_theaters`,
         changeOrigin: true,
         ws: true,
         pathRewrite: {
           '^/v2/movie/in_theaters': ''
+        }
+      },
+      '/api/v1/topics': {
+        // target: 'http://t.yushu.im/v2/movie/in_theaters',
+        target: `${vueJsUrl}/api/v1/topics`,
+        secure: false,
+        changeOrigin: true,
+        ws: true,
+        pathRewrite: {
+          '^/api/v1/topics': ''
         }
       }
     }
